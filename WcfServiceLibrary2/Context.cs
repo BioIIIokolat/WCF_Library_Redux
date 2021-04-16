@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Entity;
 using System.Linq;
+using WcfServiceLibrary2.Classes;
 
 namespace WcfServiceLibrary2
 {
@@ -20,7 +21,12 @@ namespace WcfServiceLibrary2
         // Добавьте DbSet для каждого типа сущности, который требуется включить в модель. Дополнительные сведения 
         // о настройке и использовании модели Code First см. в статье http://go.microsoft.com/fwlink/?LinkId=390109.
 
-        // public virtual DbSet<MyEntity> MyEntities { get; set; }
+        public virtual DbSet<Datings> Datings { get; set; }
+        public virtual DbSet<Filters> Filters { get; set; }
+        public virtual DbSet<Message> Messages { get; set; }
+        public virtual DbSet<User> User { get; set; }
+
+        public virtual DbSet<Likes> Likes { get; set; }
     }
 
     //public class MyEntity
