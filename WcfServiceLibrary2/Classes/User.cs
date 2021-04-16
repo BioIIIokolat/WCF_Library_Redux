@@ -25,7 +25,7 @@ namespace WcfServiceLibrary2
         public string Orientation { get; set; }
 
         public  List<int> Liked { get; set; }
-        public  List<int> Disliked { get; set; }
+        //public  List<int> Disliked { get; set; }
 
         public  List<Datings> Datings { get; set; }
         [DataMember]

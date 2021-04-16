@@ -13,6 +13,7 @@ namespace WcfServiceLibrary2.Classes
         public int FiltersId { get; set; }
 
         public int MaxAge  { get; set; }
+
         //Minimum 18
         public int MinAge  { get; set; }
 
