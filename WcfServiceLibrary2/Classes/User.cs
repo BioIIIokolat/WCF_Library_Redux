@@ -22,9 +22,9 @@ namespace WcfServiceLibrary2
 
         public string Password { get; set; }
 
-        public List<string> Hobbies { get; set; } = new List<string>();
+        public List<string> Hobbies { get; set; }
 
-        public List<string> Photos { get; set; } = new List<string>();
+        public List<string> Photos { get; set; }
 
         public string Avatarka { get; set; }
 
@@ -50,11 +50,11 @@ namespace WcfServiceLibrary2
 
         public int Count_Liked { get; set; }
 
-        public List<Likes> Likes { get; set; } = new List<Likes>();
+        public List<Likes> Likes { get; set; }
 
         //public  List<int> Disliked { get; set; }
 
-        public List<Datings> Datings { get; set; } = new List<Datings>();
+        public List<Datings> Datings { get; set; }
 
         [DataMember]
         public ICollection<ChatItemUsers> chatItems { get; set; }
