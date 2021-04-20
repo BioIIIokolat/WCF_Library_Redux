@@ -7,13 +7,13 @@ namespace WcfServiceLibrary2.Migrations
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.2.0-61023")]
-    public sealed partial class Migration : IMigrationMetadata
+    public sealed partial class AddUser : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(Migration));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(AddUser));
         
         string IMigrationMetadata.Id
         {
-            get { return "202104161247273_Migration"; }
+            get { return "202104200637342_AddUser"; }
         }
         
         string IMigrationMetadata.Source
