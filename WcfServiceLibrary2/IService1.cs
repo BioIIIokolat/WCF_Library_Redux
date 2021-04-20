@@ -15,6 +15,18 @@ namespace WcfServiceLibrary2
         string GetData(int value);
 
         [OperationContract]
+        bool GetAccount(string email, string password, bool partly = false);
+
+        [OperationContract]
+        void ChangePassword(string email, string password);
+
+        [OperationContract]
+        int GetCode(string email);
+
+        [OperationContract]
+        void AddAccount(string email, string password, string name, string city, string country, DateTime birthday, string gender);
+
+        [OperationContract]
         CompositeType GetDataUsingDataContract(CompositeType composite);
 
         // TODO: Добавьте здесь операции служб
