@@ -13,7 +13,7 @@ namespace WcfServiceLibrary2.Migrations
         
         string IMigrationMetadata.Id
         {
-            get { return "202104200637342_AddUser"; }
+            get { return "202104211125100_AddUser"; }
         }
         
         string IMigrationMetadata.Source

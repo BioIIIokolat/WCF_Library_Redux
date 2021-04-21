@@ -59,9 +59,9 @@
     <Compile Include="Classes\User.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="IService1.cs" />
-    <Compile Include="Migrations\202104200637342_AddUser.cs" />
-    <Compile Include="Migrations\202104200637342_AddUser.Designer.cs">
-      <DependentUpon>202104200637342_AddUser.cs</DependentUpon>
+    <Compile Include="Migrations\202104211125100_AddUser.cs" />
+    <Compile Include="Migrations\202104211125100_AddUser.Designer.cs">
+      <DependentUpon>202104211125100_AddUser.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -72,8 +72,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202104160734404_Migration.resx">
-      <DependentUpon>202104160734404_Migration.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202104211125100_AddUser.resx">
+      <DependentUpon>202104211125100_AddUser.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
