@@ -22,6 +22,10 @@ namespace WcfServiceLibrary2
 
         public string City { get; set; }
 
+        public double LatiTude { get; set; }
+
+        public double LongiTude { get; set; }
+
         public string Country { get; set; }
 
         public string Password { get; set; }

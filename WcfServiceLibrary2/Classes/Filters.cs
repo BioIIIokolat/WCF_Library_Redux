@@ -14,7 +14,6 @@ namespace WcfServiceLibrary2.Classes
 
         public int MaxAge  { get; set; }
 
-        //Minimum 18
         public int MinAge  { get; set; }
 
         public int ColorHair { get; set; }
@@ -23,14 +22,7 @@ namespace WcfServiceLibrary2.Classes
 
         public int Height { get; set; }
 
-        public List<string> Hobbies { get; set; }
-        public string Job { get; set; }
-
-        public List<string> Educations { get; set; }
-
         public int MaxDistance  { get; set; }
-
-        public string Searchingfor { get; set; }
 
         public User UserId { get; set; }
     }
