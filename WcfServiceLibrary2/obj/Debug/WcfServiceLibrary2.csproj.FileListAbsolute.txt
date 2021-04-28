@@ -24,5 +24,5 @@ C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfSer
 C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.csproj.CopyComplete
 C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.dll
 C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.pdb
-C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.Migrations.AddUser.resources
+C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.Migrations.AddUs.resources
 C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.csproj.GenerateResource.cache
