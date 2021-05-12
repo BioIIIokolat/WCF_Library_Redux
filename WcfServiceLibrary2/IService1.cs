@@ -24,7 +24,24 @@ namespace WcfServiceLibrary2
         int GetCode(string email);
 
         [OperationContract]
-        void AddAccount(string email, string password, string name, string city, string country, DateTime birthday, string gender);
+        List<User> DefaultFilter(string email);
+
+        [OperationContract]
+        double GetLatiTude(string email);
+
+        [OperationContract]
+        double GetLongiTude(string email);
+
+        [OperationContract]
+        double GetDistanceBetweenPoints(double lat1, double long1, double lat2, double long2);
+
+        [OperationContract]
+        void AddAccount(string email, string password, string name,
+            string city, string country, DateTime birthday, string gender,
+            double latitude, double longitude);
+
+        [OperationContract]
+        string GetName(string email);
 
         [OperationContract]
         CompositeType GetDataUsingDataContract(CompositeType composite);

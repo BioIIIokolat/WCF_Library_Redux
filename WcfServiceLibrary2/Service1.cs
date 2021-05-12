@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Runtime.Serialization;
-using System.ServiceModel;
 using System.Text;
 
 namespace WcfServiceLibrary2
@@ -15,16 +15,23 @@ namespace WcfServiceLibrary2
         Context model = new Context();
 
         public void AddAccount(string email, string password, string name, string city,
-            string country, DateTime birthday, string gender)
+            string country, DateTime birthday, string gender, double latitude, double longitude)
         {
             if (GetAccount(email, password) == false)
             {
                 string[] name_family = name.Split(' ');
 
-                model.User.Add(new User
+                Directory.CreateDirectory($@"Accounts\{name_family[0] + " " + name_family[1]}\Images");
+
+                File.Copy(@"no_avatar.png", $"Accounts/{name_family[0] + " " + name_family[1]}/Images/1.png", true);
+
+                var user = model.User.Add(new User
                 {
                     Name = name_family[0],
                     LastName = name_family[1],
+                    LatiTude = latitude,
+                    LongiTude = longitude,
+                    Avatarka = $"Accounts/{ name_family[0] + " " + name_family[1] }/Images/1.png",
                     Email = email,
                     Password = password,
                     City = city,
@@ -32,6 +39,11 @@ namespace WcfServiceLibrary2
                     Birthday = birthday,
                     Gender = gender
                 } );
+
+                user.Photos = new List<string>()
+                {
+                    $@"Accounts/{name_family[0] + " " + name_family[1]}/Images/1.png"
+                };
 
                 model.SaveChanges();
             }
@@ -127,5 +139,86 @@ namespace WcfServiceLibrary2
 
             model.SaveChanges();
         }
+
+        public List<User> DefaultFilter(string email)
+        {
+            // Создаём пустой список пользователей
+            List<User> users = new List<User>();
+
+            // Пользователь для которого делается список людей
+            User user = model.User.Single(t => t.Email == email);
+
+            // Возраст нашего пользователя
+            int user_age = DateTime.Now.Year - user.Birthday.Year;
+
+            // Список пользователей из города нашего пользователя
+            // И противоположный пол 
+            var users_rec = model.User.Where(t => t.City == user.City)
+                .Where(t => t.Gender != user.Gender)
+                .ToList();
+
+            foreach (var item in users_rec)
+            {
+                //int other_user_age = DateTime.Now.Year - item.Birthday.Year;
+
+                //// Если небольшая разница в возрасте
+                //// тогда пользователь добавляется в список
+                //if(user_age == other_user_age
+                //    || user_age + 1 == other_user_age
+                //    || user_age == other_user_age + 1
+                //    || user_age + 2 == other_user_age
+                //    || user_age == other_user_age + 2)
+                //{
+
+                if(item.Photos == null)
+                    Console.WriteLine("хуй");
+
+                    users.Add(item);
+                //}
+            }
+
+            if (users.Count > 0)
+                return users;
+            else
+                return null;
+        }
+
+
+        public double GetDistanceBetweenPoints(double lat1, double long1, double lat2, double long2)
+        {
+            double distance = 0;
+
+            double dLat = (lat2 - lat1) / 180 * Math.PI;
+            double dLong = (long2 - long1) / 180 * Math.PI;
+
+            double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
+                        + Math.Cos(lat1 / 180 * Math.PI) * Math.Cos(lat2 / 180 * Math.PI)
+                        * Math.Sin(dLong / 2) * Math.Sin(dLong / 2);
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            // Calculate radius of earth
+            // For this you can assume any of the two points.
+
+            double radiusE = 6378135; // Equatorial radius, in metres
+            double radiusP = 6356750; // Polar Radius
+
+            //Numerator part of function
+            double nr = Math.Pow(radiusE * radiusP * Math.Cos(lat1 / 180 * Math.PI), 2);
+            //Denominator part of the function
+            double dr = Math.Pow(radiusE * Math.Cos(lat1 / 180 * Math.PI), 2)
+                            + Math.Pow(radiusP * Math.Sin(lat1 / 180 * Math.PI), 2);
+            double radius = Math.Sqrt(nr / dr);
+
+            //Calculate distance in meters.
+            distance = radius * c;
+            return distance; // distance in meters
+        }
+
+        public double GetLatiTude(string email) => model.User.Single(t => t.Email == email).LatiTude;
+
+        public double GetLongiTude(string email) => model.User.Single(t => t.Email == email).LongiTude;
+
+        public string GetName(string email) => model.User.Single(t => t.Email == email).Name
+            + " " + model.User.Single(t => t.Email == email).LastName;
     }
 }
