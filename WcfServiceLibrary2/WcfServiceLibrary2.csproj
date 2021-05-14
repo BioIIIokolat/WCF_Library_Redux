@@ -52,16 +52,27 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\BlackList.cs" />
     <Compile Include="Classes\Datings.cs" />
     <Compile Include="Classes\Filters.cs" />
+    <Compile Include="Classes\Hobbies.cs" />
     <Compile Include="Classes\Likes.cs" />
     <Compile Include="Classes\Message.cs" />
+    <Compile Include="Classes\Photos.cs" />
     <Compile Include="Classes\User.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="IService1.cs" />
     <Compile Include="Migrations\202104280939253_AddUs.cs" />
     <Compile Include="Migrations\202104280939253_AddUs.Designer.cs">
       <DependentUpon>202104280939253_AddUs.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202105140905579_NewD.cs" />
+    <Compile Include="Migrations\202105140905579_NewD.Designer.cs">
+      <DependentUpon>202105140905579_NewD.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202105141224494_NewD2.cs" />
+    <Compile Include="Migrations\202105141224494_NewD2.Designer.cs">
+      <DependentUpon>202105141224494_NewD2.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -74,6 +85,12 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202104280939253_AddUs.resx">
       <DependentUpon>202104280939253_AddUs.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202105140905579_NewD.resx">
+      <DependentUpon>202105140905579_NewD.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202105141224494_NewD2.resx">
+      <DependentUpon>202105141224494_NewD2.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

@@ -25,6 +25,9 @@ namespace WcfServiceLibrary2
         public virtual DbSet<Filters> Filters { get; set; }
         public virtual DbSet<Message> Messages { get; set; }
         public virtual DbSet<User> User { get; set; }
+        public virtual DbSet<Photos> Photos { get; set; }
+        public virtual DbSet<Hobbies> Hobbies { get; set; }
+        public virtual DbSet<BlackList> BlackLists { get; set; }
         public virtual DbSet<Likes> Likes { get; set; }
     }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Text;
+using WcfServiceLibrary2.Classes;
 
 namespace WcfServiceLibrary2
 {
@@ -28,6 +29,12 @@ namespace WcfServiceLibrary2
 
         [OperationContract]
         double GetLatiTude(string email);
+
+        [OperationContract]
+        List<Photos> GetPhotos(User user);
+
+        [OperationContract]
+        List<Hobbies> GetHobbies(User user);
 
         [OperationContract]
         double GetLongiTude(string email);

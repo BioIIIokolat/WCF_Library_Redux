@@ -30,10 +30,6 @@ namespace WcfServiceLibrary2
 
         public string Password { get; set; }
 
-        public List<string> Hobbies { get; set; }
-
-        public List<string> Photos { get; set; }
-
         public string Avatarka { get; set; }
 
         public string Description { get; set; }
@@ -48,7 +44,7 @@ namespace WcfServiceLibrary2
 
         public string Faith { get; set; }
 
-        public List<string> Education { get; set; }
+        public string Education { get; set; }
 
         public string Job { get; set; }
 
@@ -58,7 +54,7 @@ namespace WcfServiceLibrary2
 
         public List<Likes> Likes { get; set; }
 
-        public List<Datings> Datings { get; set; }
+        //public List<Datings> Datings { get; set; }
 
         [DataMember]
         public ICollection<ChatItemUsers> chatItems { get; set; }

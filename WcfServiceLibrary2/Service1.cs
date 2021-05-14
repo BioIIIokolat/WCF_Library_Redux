@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Runtime.Serialization;
 using System.Text;
+using WcfServiceLibrary2.Classes;
 
 namespace WcfServiceLibrary2
 {
@@ -23,7 +24,7 @@ namespace WcfServiceLibrary2
 
                 Directory.CreateDirectory($@"Accounts\{name_family[0] + " " + name_family[1]}\Images");
 
-                File.Copy(@"no_avatar.png", $"Accounts/{name_family[0] + " " + name_family[1]}/Images/1.png", true);
+                //File.Copy(@"no_avatar.png", $"Accounts/{name_family[0] + " " + name_family[1]}/Images/1.png", true);
 
                 var user = model.User.Add(new User
                 {
@@ -31,7 +32,7 @@ namespace WcfServiceLibrary2
                     LastName = name_family[1],
                     LatiTude = latitude,
                     LongiTude = longitude,
-                    Avatarka = $"Accounts/{ name_family[0] + " " + name_family[1] }/Images/1.png",
+                    Avatarka = "no_avatar.png",
                     Email = email,
                     Password = password,
                     City = city,
@@ -39,11 +40,6 @@ namespace WcfServiceLibrary2
                     Birthday = birthday,
                     Gender = gender
                 } );
-
-                user.Photos = new List<string>()
-                {
-                    $@"Accounts/{name_family[0] + " " + name_family[1]}/Images/1.png"
-                };
 
                 model.SaveChanges();
             }
@@ -169,10 +165,6 @@ namespace WcfServiceLibrary2
                 //    || user_age + 2 == other_user_age
                 //    || user_age == other_user_age + 2)
                 //{
-
-                if(item.Photos == null)
-                    Console.WriteLine("хуй");
-
                     users.Add(item);
                 //}
             }
@@ -211,6 +203,7 @@ namespace WcfServiceLibrary2
 
             //Calculate distance in meters.
             distance = radius * c;
+
             return distance; // distance in meters
         }
 
@@ -220,5 +213,21 @@ namespace WcfServiceLibrary2
 
         public string GetName(string email) => model.User.Single(t => t.Email == email).Name
             + " " + model.User.Single(t => t.Email == email).LastName;
+
+        public List<Photos> GetPhotos(User user)
+        {
+            if (model.Photos.Any(t => t.UserID == user.UserId))
+                return model.Photos.Where(t => t.UserID == user.UserId).ToList();
+            else
+                return null;
+        }
+
+        public List<Hobbies> GetHobbies(User user)
+        {
+            if (model.Hobbies.Any(t => t.UserID == user.UserId))
+                return model.Hobbies.Where(t => t.UserID == user.UserId).ToList();
+            else
+                return null;
+        }
     }
 }
