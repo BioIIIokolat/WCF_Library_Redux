@@ -8,8 +8,20 @@ using WcfServiceLibrary2.Classes;
 
 namespace WcfServiceLibrary2
 {
+    //[ServiceContract(CallbackContract = typeof(IMyCallback))]
+    public interface IMyCallback
+    {
+        [OperationContract]
+        void OnCallback();
+
+        [OperationContract]
+        void OnSendMessage(string mes);
+
+    }
+
     // ПРИМЕЧАНИЕ. Команду "Переименовать" в меню "Рефакторинг" можно использовать для одновременного изменения имени интерфейса "IService1" в коде и файле конфигурации.
-    [ServiceContract]
+    // [ServiceContract]
+    [ServiceContract(CallbackContract = typeof(IMyCallback))]
     public interface IService1
     {
         [OperationContract]
@@ -34,6 +46,12 @@ namespace WcfServiceLibrary2
         List<Photos> GetPhotos(User user);
 
         [OperationContract]
+        User GetUser(string email);
+
+        [OperationContract]
+        void AddLike(User user_u, User user_who);
+
+        [OperationContract]
         List<Hobbies> GetHobbies(User user);
 
         [OperationContract]
@@ -52,8 +70,6 @@ namespace WcfServiceLibrary2
 
         [OperationContract]
         CompositeType GetDataUsingDataContract(CompositeType composite);
-
-        // TODO: Добавьте здесь операции служб
     }
 
     // Используйте контракт данных, как показано на следующем примере, чтобы добавить сложные типы к сервисным операциям.

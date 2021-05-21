@@ -5,12 +5,13 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Text;
 using WcfServiceLibrary2.Classes;
 
 namespace WcfServiceLibrary2
 {
-    // ПРИМЕЧАНИЕ. Команду "Переименовать" в меню "Рефакторинг" можно использовать для одновременного изменения имени класса "Service1" в коде и файле конфигурации.
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class Service1 : IService1
     {
         Context model = new Context();
@@ -174,8 +175,7 @@ namespace WcfServiceLibrary2
             else
                 return null;
         }
-
-
+        
         public double GetDistanceBetweenPoints(double lat1, double long1, double lat2, double long2)
         {
             double distance = 0;
@@ -228,6 +228,15 @@ namespace WcfServiceLibrary2
                 return model.Hobbies.Where(t => t.UserID == user.UserId).ToList();
             else
                 return null;
+        }
+
+        public User GetUser(string email) => model.User.Single(t => t.Email == email);
+
+        public void AddLike(User user_u, User user_who)
+        {
+            model.Likes.Add(new Likes { User_Liked_ID = user_u, User_Who_Liked_ID = user_who, Date_Like = DateTime.Now });
+
+            model.SaveChanges();
         }
     }
 }
