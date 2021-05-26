@@ -4,7 +4,9 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Text;
+using System.Windows.Media;
 using WcfServiceLibrary2.Classes;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace WcfServiceLibrary2
 {
@@ -26,6 +28,19 @@ namespace WcfServiceLibrary2
     {
         [OperationContract]
         string GetData(int value);
+
+        [OperationContract]
+        void UpdateUser(string name, string lastname, DateTime birthday,
+            string coloreye, string colorhaircut, string faith,
+            string gender, string job,
+            string descriptions, string education, 
+            string[] hobbies, User user);
+
+        [OperationContract]
+        void AddPhoto(ImageBrush image, User user);
+
+        [OperationContract]
+        ImageBrush GetImage(User user);
 
         [OperationContract]
         bool GetAccount(string email, string password, bool partly = false);

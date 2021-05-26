@@ -23,10 +23,6 @@ namespace WcfServiceLibrary2.Classes
         [DataMember]
         public bool IsAcсeptedBySecond { get; set; }
         [DataMember]
-        public string Adress { get; set; }
-        [DataMember]
-        //пользователь выбирает тип типа кафе,зоопарк...
-        public string Typeofplace { get; set; }
-
+        public string Address { get; set; }
     }
 }

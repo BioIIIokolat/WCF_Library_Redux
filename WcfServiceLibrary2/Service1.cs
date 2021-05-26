@@ -4,14 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Text;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using WcfServiceLibrary2.Classes;
 
 namespace WcfServiceLibrary2
 {
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerSession, ConcurrencyMode = ConcurrencyMode.Multiple)]
     public class Service1 : IService1
     {
         Context model = new Context();
@@ -211,8 +214,8 @@ namespace WcfServiceLibrary2
 
         public double GetLongiTude(string email) => model.User.Single(t => t.Email == email).LongiTude;
 
-        public string GetName(string email) => model.User.Single(t => t.Email == email).Name
-            + " " + model.User.Single(t => t.Email == email).LastName;
+        public string GetName(string email) => model.User.FirstOrDefault(t => t.Email == email).Name
+            + " " + model.User.FirstOrDefault(t => t.Email == email).LastName;
 
         public List<Photos> GetPhotos(User user)
         {
@@ -230,13 +233,72 @@ namespace WcfServiceLibrary2
                 return null;
         }
 
-        public User GetUser(string email) => model.User.Single(t => t.Email == email);
+        public User GetUser(string email) => model.User.Where(t => t.Email == email).FirstOrDefault();
 
         public void AddLike(User user_u, User user_who)
         {
             model.Likes.Add(new Likes { User_Liked_ID = user_u, User_Who_Liked_ID = user_who, Date_Like = DateTime.Now });
 
             model.SaveChanges();
+        }
+
+        public void UpdateUser(string name, string lastname, DateTime birthday,
+           string coloreye, string colorhaircut, string faith,
+           string gender, string job,
+           string descriptions, string education,
+           string[] hobbies, User user)
+        {
+            User user1 = model.User.Where(t => t.UserId == user.UserId).FirstOrDefault();
+
+            user1.Name = name;
+            user1.LastName = lastname;
+            user1.Description = descriptions;
+            user1.Education = education;
+            user1.Birthday = birthday;
+            user1.Job = job;
+            user1.ColorEye = coloreye;
+            user1.ColorHairCut = colorhaircut;
+            user1.Faith = faith;
+            user1.Gender = gender;
+
+            if (hobbies.Count() != 0)
+            {
+                var model12 = model.Hobbies.Select(t => t.Hobbie);
+
+                foreach (var item2 in hobbies)
+                {
+                    if (!model12.Contains(item2))
+                        model.Hobbies.Add(new Hobbies { Hobbie = item2, UserID = user1.UserId });
+                }
+            }
+
+            model.SaveChanges();
+        }
+
+        public void AddPhoto(string image, User user)
+        {
+            model.Photos.Add(new Photos { Photo = image, UserID = user.UserId });
+
+            model.SaveChanges();
+        }
+
+        public void AddPhoto(ImageBrush image, User user)
+        {
+           
+        }
+
+        public ImageBrush GetImage(User user)
+        {
+            if (File.Exists(user.Avatarka))
+            {
+                ImageBrush imageBrush = new ImageBrush();
+
+                imageBrush.ImageSource = new BitmapImage(new Uri(user.Avatarka, UriKind.Relative));
+
+                return imageBrush;
+            }
+            else
+                return null;
         }
     }
 }
