@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -43,7 +44,7 @@ namespace WcfServiceLibrary2
                     Country = country,
                     Birthday = birthday,
                     Gender = gender
-                } );
+                });
 
                 model.SaveChanges();
             }
@@ -95,7 +96,7 @@ namespace WcfServiceLibrary2
 
                 return code;
             }
-            else 
+            else
                 return 0;
         }
 
@@ -140,13 +141,10 @@ namespace WcfServiceLibrary2
             model.SaveChanges();
         }
 
-        public List<User> DefaultFilter(string email)
+        public List<User> DefaultFilter(User user)
         {
             // Создаём пустой список пользователей
             List<User> users = new List<User>();
-
-            // Пользователь для которого делается список людей
-            User user = model.User.Single(t => t.Email == email);
 
             // Возраст нашего пользователя
             int user_age = DateTime.Now.Year - user.Birthday.Year;
@@ -169,7 +167,7 @@ namespace WcfServiceLibrary2
                 //    || user_age + 2 == other_user_age
                 //    || user_age == other_user_age + 2)
                 //{
-                    users.Add(item);
+                users.Add(item);
                 //}
             }
 
@@ -178,7 +176,7 @@ namespace WcfServiceLibrary2
             else
                 return null;
         }
-        
+
         public double GetDistanceBetweenPoints(double lat1, double long1, double lat2, double long2)
         {
             double distance = 0;
@@ -210,17 +208,26 @@ namespace WcfServiceLibrary2
             return distance; // distance in meters
         }
 
-        public double GetLatiTude(string email) => model.User.Single(t => t.Email == email).LatiTude;
+        public double GetLatiTude(string email) => model.User.Where(t => t.Email == email)
+            .FirstOrDefault().LatiTude;
 
-        public double GetLongiTude(string email) => model.User.Single(t => t.Email == email).LongiTude;
+        public double GetLongiTude(string email) => model.User.Where(t => t.Email == email)
+            .FirstOrDefault().LongiTude;
 
         public string GetName(string email) => model.User.FirstOrDefault(t => t.Email == email).Name
             + " " + model.User.FirstOrDefault(t => t.Email == email).LastName;
 
-        public List<Photos> GetPhotos(User user)
+        public List<byte[]> GetPhotos(User user)
         {
             if (model.Photos.Any(t => t.UserID == user.UserId))
-                return model.Photos.Where(t => t.UserID == user.UserId).ToList();
+            {
+                List<byte[]> images = new List<byte[]>();
+
+                foreach (var item in model.Photos.Where(t => t.UserID == user.UserId))
+                    images.Add(File.ReadAllBytes(item.Photo));
+
+                return images;
+            }
             else
                 return null;
         }
@@ -284,21 +291,27 @@ namespace WcfServiceLibrary2
 
         public void AddPhoto(ImageBrush image, User user)
         {
-           
+
         }
 
-        public ImageBrush GetImage(User user)
+        public byte[] GetImage(User user) => File.ReadAllBytes(user.Avatarka);
+
+        public void SetAvatar(User user, byte[] array)
         {
-            if (File.Exists(user.Avatarka))
+            string path = user.Avatarka;
+
+            BitmapImage bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.StreamSource = new MemoryStream(array);
+            bitmap.EndInit();
+
+            BitmapEncoder encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+            using (var fileStream = new System.IO.FileStream(path, System.IO.FileMode.Create))
             {
-                ImageBrush imageBrush = new ImageBrush();
-
-                imageBrush.ImageSource = new BitmapImage(new Uri(user.Avatarka, UriKind.Relative));
-
-                return imageBrush;
+                encoder.Save(fileStream);
             }
-            else
-                return null;
         }
     }
 }

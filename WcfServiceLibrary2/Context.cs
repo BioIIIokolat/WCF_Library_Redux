@@ -21,19 +21,14 @@ namespace WcfServiceLibrary2
         // Добавьте DbSet для каждого типа сущности, который требуется включить в модель. Дополнительные сведения 
         // о настройке и использовании модели Code First см. в статье http://go.microsoft.com/fwlink/?LinkId=390109.
 
-        public virtual DbSet<Datings> Datings { get; set; }
         public virtual DbSet<Filters> Filters { get; set; }
         public virtual DbSet<Message> Messages { get; set; }
         public virtual DbSet<User> User { get; set; }
+        public virtual DbSet<ChatItem> ChatItems { get; set; }
+        public virtual DbSet<ChatItemUsers> ChatItemUsers { get; set; }
         public virtual DbSet<Photos> Photos { get; set; }
         public virtual DbSet<Hobbies> Hobbies { get; set; }
         public virtual DbSet<BlackList> BlackLists { get; set; }
         public virtual DbSet<Likes> Likes { get; set; }
     }
-
-    //public class MyEntity
-    //{
-    //    public int Id { get; set; }
-    //    public string Name { get; set; }
-    //}
 }

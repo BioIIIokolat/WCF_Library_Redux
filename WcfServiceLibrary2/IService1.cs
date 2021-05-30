@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
+using System.ServiceModel.Web;
 using System.Text;
+using System.Web.Script.Services;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using WcfServiceLibrary2.Classes;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -40,7 +44,7 @@ namespace WcfServiceLibrary2
         void AddPhoto(ImageBrush image, User user);
 
         [OperationContract]
-        ImageBrush GetImage(User user);
+        byte[] GetImage(User user);
 
         [OperationContract]
         bool GetAccount(string email, string password, bool partly = false);
@@ -52,13 +56,16 @@ namespace WcfServiceLibrary2
         int GetCode(string email);
 
         [OperationContract]
-        List<User> DefaultFilter(string email);
+        void SetAvatar(User user, byte[] array);
+
+        [OperationContract]
+        List<User> DefaultFilter(User user);
 
         [OperationContract]
         double GetLatiTude(string email);
 
         [OperationContract]
-        List<Photos> GetPhotos(User user);
+        List<byte[]> GetPhotos(User user);
 
         [OperationContract]
         User GetUser(string email);

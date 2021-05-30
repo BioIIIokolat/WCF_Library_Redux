@@ -54,12 +54,12 @@ namespace WcfServiceLibrary2
 
         public List<Likes> Likes { get; set; }
 
-        //public List<Datings> Datings { get; set; }
-
         [DataMember]
         public ICollection<ChatItemUsers> chatItems { get; set; }
 
         public DateTime Birthday { get; set; }
+
+        public Filters Filters { get; set; }
     }
     
 }

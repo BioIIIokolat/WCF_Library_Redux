@@ -11,19 +11,12 @@ namespace WcfServiceLibrary2.Classes
     {
         [Key]
         public int FiltersId { get; set; }
-
         public int MaxAge  { get; set; }
-
         public int MinAge  { get; set; }
-
         public int ColorHair { get; set; }
-
         public string ColorEye { get; set; }
-
         public int Height { get; set; }
-
         public int MaxDistance  { get; set; }
-
-        public User UserId { get; set; }
+        public int UserId { get; set; }
     }
 }
