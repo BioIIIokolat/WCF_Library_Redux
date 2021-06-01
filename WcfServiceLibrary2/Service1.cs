@@ -302,9 +302,10 @@ namespace WcfServiceLibrary2
             model.SaveChanges();
         }
 
-        public void AddPhoto(ImageBrush image, User user)
+        public void AddPhoto(byte[] image, User user)
         {
-
+            string filename = "";
+            File.WriteAllBytes(filename, image);
         }
 
         public byte[] GetImage(User user) => File.ReadAllBytes(user.Avatarka);
@@ -536,6 +537,18 @@ namespace WcfServiceLibrary2
                 Users.Add((from n in model.User where n.UserId == ban.UserEnemyID select n).FirstOrDefault());
 
             return Users;
+        }
+
+        public void DeletePhoto(byte[] image, User user)
+        {
+            string filename = "";
+            foreach (var Photo in Directory.GetFiles(filename))
+            {
+                if (File.ReadAllBytes(Photo).SequenceEqual(image))
+                {
+                    File.Delete(filename);              
+                }
+            }
         }
 
         public Service1()

@@ -39,7 +39,10 @@ namespace WcfServiceLibrary2
             string[] hobbies, User user);
 
         [OperationContract]
-        void AddPhoto(ImageBrush image, User user);
+        void AddPhoto(byte[] image, User user);
+
+        [OperationContract]
+        void DeletePhoto(byte[] image, User user);
 
         [OperationContract]
         byte[] GetImage(User user);
