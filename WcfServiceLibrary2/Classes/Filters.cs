@@ -13,7 +13,7 @@ namespace WcfServiceLibrary2.Classes
         public int FiltersId { get; set; }
         public int MaxAge  { get; set; }
         public int MinAge  { get; set; }
-        public int ColorHair { get; set; }
+        public string ColorHair { get; set; }
         public string ColorEye { get; set; }
         public int Height { get; set; }
         public int MaxDistance  { get; set; }

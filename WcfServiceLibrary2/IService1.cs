@@ -41,7 +41,7 @@ namespace WcfServiceLibrary2
             string[] hobbies, User user);
 
         [OperationContract]
-        void AddPhoto(ImageBrush image, User user);
+        void AddPhoto(BitmapImage image, User user, string ext);
 
         [OperationContract]
         byte[] GetImage(User user);
@@ -51,6 +51,9 @@ namespace WcfServiceLibrary2
 
         [OperationContract]
         void ChangePassword(string email, string password);
+
+        [OperationContract]
+        bool IsExistsHobbies(User user);
 
         [OperationContract]
         int GetCode(string email);
@@ -89,6 +92,24 @@ namespace WcfServiceLibrary2
 
         [OperationContract]
         string GetName(string email);
+
+        [OperationContract]
+        void GetOnline(int Id);
+
+        [OperationContract]
+        void GetOffline(int Id);
+
+        [OperationContract]
+        void BanUser(int senderID, int bannedID);
+
+        [OperationContract]
+        void UnbanUser(int senderID, int bannedID);
+
+        [OperationContract]
+        void ChangeFilters(int userID, Filters f);
+
+        [OperationContract]
+        List<User> FindUsers(int userID);
 
         [OperationContract]
         CompositeType GetDataUsingDataContract(CompositeType composite);

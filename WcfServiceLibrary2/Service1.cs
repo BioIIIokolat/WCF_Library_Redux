@@ -9,6 +9,7 @@ using System.Net.Mime;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Text;
+using System.Web;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using WcfServiceLibrary2.Classes;
@@ -19,6 +20,8 @@ namespace WcfServiceLibrary2
     public class Service1 : IService1
     {
         Context model = new Context();
+        public delegate void SendMessage(int chatid, Message tmpmes, int id);
+        Dictionary<int, UserClient> OnlineUsers = new Dictionary<int, UserClient>();
 
         public void AddAccount(string email, string password, string name, string city,
             string country, DateTime birthday, string gender, double latitude, double longitude)
@@ -28,8 +31,6 @@ namespace WcfServiceLibrary2
                 string[] name_family = name.Split(' ');
 
                 Directory.CreateDirectory($@"Accounts\{name_family[0] + " " + name_family[1]}\Images");
-
-                //File.Copy(@"no_avatar.png", $"Accounts/{name_family[0] + " " + name_family[1]}/Images/1.png", true);
 
                 var user = model.User.Add(new User
                 {
@@ -43,10 +44,18 @@ namespace WcfServiceLibrary2
                     City = city,
                     Country = country,
                     Birthday = birthday,
-                    Gender = gender
-                });
+                    Gender = gender,
+                    chatItems = new List<ChatItemUsers>(),
+                    Filters = new Filters()
+                }) ;
 
                 model.SaveChanges();
+
+                int res = model.User.Where(x => x.Email == email)
+                    .First()
+                    .UserId;
+
+                GetOnline(res);
             }
         }
 
@@ -150,31 +159,23 @@ namespace WcfServiceLibrary2
             int user_age = DateTime.Now.Year - user.Birthday.Year;
 
             // Список пользователей из города нашего пользователя
-            // И противоположный пол 
-            var users_rec = model.User.Where(t => t.City == user.City)
-                .Where(t => t.Gender != user.Gender)
+            // И противоположный пол, с одного горла и примерно одинакого возраста,
+            // Максимальная разница в возрасте 3 года
+            var users_rec = model.User.Where(t => t.City == user.City
+            && t.Gender != user.Gender
+            && t.Birthday.Year == user.Birthday.Year
+            || t.Birthday.Year + 1 == user.Birthday.Year
+            || t.Birthday.Year + 2 == user.Birthday.Year
+            || t.Birthday.Year + 3 == user.Birthday.Year)
                 .ToList();
 
-            foreach (var item in users_rec)
-            {
-                //int other_user_age = DateTime.Now.Year - item.Birthday.Year;
-
-                //// Если небольшая разница в возрасте
-                //// тогда пользователь добавляется в список
-                //if(user_age == other_user_age
-                //    || user_age + 1 == other_user_age
-                //    || user_age == other_user_age + 1
-                //    || user_age + 2 == other_user_age
-                //    || user_age == other_user_age + 2)
-                //{
-                users.Add(item);
-                //}
-            }
+            users = users_rec;
 
             if (users.Count > 0)
                 return users;
             else
-                return null;
+                return model.User.Where(t => t.City == user.City
+                && t.Gender != user.Gender).ToList();
         }
 
         public double GetDistanceBetweenPoints(double lat1, double long1, double lat2, double long2)
@@ -244,8 +245,48 @@ namespace WcfServiceLibrary2
 
         public void AddLike(User user_u, User user_who)
         {
-            model.Likes.Add(new Likes { User_Liked_ID = user_u, User_Who_Liked_ID = user_who, Date_Like = DateTime.Now });
+            model.Likes.Add(new Likes { User_Liked_ID = user_u,
+                User_Who_Liked_ID = user_who,
+                Date_Like = DateTime.Now });
 
+            model.SaveChanges();
+
+            var r = (from n in model.Likes
+                     where n.User_Who_Liked_ID.UserId == user_u.UserId &&
+                     n.User_Liked_ID.UserId == user_who.UserId
+                     select n).ToList();
+
+            var r1 = (from n in model.Likes
+                      where n.User_Who_Liked_ID.UserId == user_who.UserId &&
+                      n.User_Liked_ID.UserId == user_u.UserId
+                      select n).ToList();
+
+            if (r.Count != 0 && r1.Count != 0)
+            {
+                ChatItem ci = new ChatItem { 
+                    Messages = new List<Message>(),
+                    Participants = new List<ChatItemUsers>(),
+                    Title = "ABOBA"
+                };
+
+                ChatItemUsers ciu1 = new ChatItemUsers
+                {
+                    ChatItem = ci,
+                    User = user_u,
+                };
+                ChatItemUsers ciu2 = new ChatItemUsers
+                {
+                    ChatItem = ci,
+                    User = user_who
+                };
+
+                model.ChatItemUsers.Add(ciu1);
+                model.ChatItemUsers.Add(ciu2);
+                ci.Participants.Add(ciu1);
+                ci.Participants.Add(ciu2);
+
+                model.ChatItems.Add(ci);
+            }
             model.SaveChanges();
         }
 
@@ -282,20 +323,70 @@ namespace WcfServiceLibrary2
             model.SaveChanges();
         }
 
-        public void AddPhoto(string image, User user)
+        public void AddPhoto(BitmapImage image, User user, string ext)
         {
-            model.Photos.Add(new Photos { Photo = image, UserID = user.UserId });
+            int number_photo = model.Photos.Where(t => t.PhotoID == user.UserId)
+                .Count();
 
-            model.SaveChanges();
+            if (number_photo <= 5)
+            {
+                string name = user.Name + " " + user.LastName;
+
+                string name_file = number_photo + ext;
+
+                string[] path = new string[] { Environment.CurrentDirectory + "Accounts" + name + "Images" + name_file};
+
+                string _path = Path.Combine(path);
+
+                File.Create(_path);
+
+                model.Photos.Add(new Photos { Photo = _path, UserID = user.UserId });
+
+                model.SaveChanges();
+
+                if (ext.Contains(".png"))
+                {
+                    BitmapEncoder encoder = new PngBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(image));
+
+                    using (var fileStream = new System.IO.FileStream(_path, System.IO.FileMode.Create))
+                    {
+                        encoder.Save(fileStream);
+                    }
+                }
+
+                if(ext.Contains(".jpg") || ext.Contains(".jpeg"))
+                {
+                    BitmapEncoder encoder = new JpegBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(image));
+
+                    using (var fileStream = new System.IO.FileStream(_path, System.IO.FileMode.Create))
+                    {
+                        encoder.Save(fileStream);
+                    }
+                }
+
+            }
         }
 
-        public void AddPhoto(ImageBrush image, User user)
+        public bool IsExistsHobbies(User user)
         {
-
+            if (model.Hobbies.Any(t => t.UserID == user.UserId))
+                return true;
+            else
+                return false;
         }
 
-        public byte[] GetImage(User user) => File.ReadAllBytes(user.Avatarka);
+        public byte[] GetImage(User user)
+        {
+            string[] path = new string[] { Environment.CurrentDirectory, user.Avatarka };
 
+            string fullpath = Path.Combine(path);
+
+            return File.ReadAllBytes(fullpath);
+        }
+
+        // Метод установки аватарки
         public void SetAvatar(User user, byte[] array)
         {
             string path = user.Avatarka;
@@ -313,5 +404,56 @@ namespace WcfServiceLibrary2
                 encoder.Save(fileStream);
             }
         }
+
+
+        public void GetOnline(int Id)
+        {
+            if (!OnlineUsers.ContainsKey(Id)) OnlineUsers.Add(Id, new UserClient { callback = OperationContext.Current.GetCallbackChannel<IMyCallback>() });
+        }
+
+        public void GetOffline(int Id)
+        {
+            if (OnlineUsers.ContainsKey(Id)) OnlineUsers.Remove(Id);
+        }
+
+        public void BanUser(int senderID, int bannedID)
+        {
+            var list = from n in model.BlackLists where n.UserID == senderID select n.UserEnemyID;
+            if (list != null && !list.Contains(bannedID)) model.BlackLists.Add(new BlackList() { UserID = bannedID, ID = senderID });
+        }
+
+        public void UnbanUser(int senderID, int bannedID)
+        {
+            var list = from n in model.BlackLists where n.UserID == senderID select n;
+            if (list != null && list.Select(t => t.UserEnemyID).Contains(bannedID)) model.BlackLists.Remove((from t in list where t.UserEnemyID == bannedID select t).FirstOrDefault());
+        }
+
+        public void ChangeFilters(int userID, Filters f)
+        {
+            var r = (from n in model.User where n.UserId == userID select n).FirstOrDefault();
+            if (r != null && f != null) r.Filters = f;
+        }
+
+        public List<User> FindUsers(int userID)
+        {
+            List<User> ChoosedUsers = new List<User>();
+            User CurrentUser = (from n in model.User where n.UserId == userID select n).FirstOrDefault();
+
+            var results = from n in model.User
+                          where n.UserId != userID &&
+                          (((n.ColorEye == CurrentUser.Filters.ColorEye) || CurrentUser.Filters.ColorEye == null)
+                          && GetDistanceBetweenPoints(n.LatiTude, n.LongiTude, CurrentUser.LatiTude, CurrentUser.LongiTude) <= CurrentUser.Filters.MaxDistance
+                          && n.ColorHairCut == CurrentUser.Filters.ColorHair
+                          && ((DateTime.Now.Year - n.Birthday.Year <= CurrentUser.Filters.MaxAge && DateTime.Now.Year - n.Birthday.Year >= CurrentUser.Filters.MinAge)))
+                          select n;
+            foreach (var r in results) ChoosedUsers.Add(r);
+            return ChoosedUsers;
+        }
+
+        public List<User> GetUsersWhoLikedYou(User user)
+        {
+            return (from n in model.Likes where n.User_Who_Liked_ID.UserId == user.UserId select n.User_Liked_ID).ToList();
+        }
+
     }
 }
