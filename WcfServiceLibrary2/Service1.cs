@@ -152,16 +152,11 @@ namespace WcfServiceLibrary2
 
         public List<User> DefaultFilter(User user)
         {
-            // Создаём пустой список пользователей
-            List<User> users = new List<User>();
-
-            // Возраст нашего пользователя
-            int user_age = DateTime.Now.Year - user.Birthday.Year;
-
             // Список пользователей из города нашего пользователя
             // И противоположный пол, с одного горла и примерно одинакого возраста,
             // Максимальная разница в возрасте 3 года
             var users_rec = model.User.Where(t => t.City == user.City
+            && t.UserId != user.UserId
             && t.Gender != user.Gender
             && t.Birthday.Year == user.Birthday.Year
             || t.Birthday.Year + 1 == user.Birthday.Year
@@ -169,13 +164,12 @@ namespace WcfServiceLibrary2
             || t.Birthday.Year + 3 == user.Birthday.Year)
                 .ToList();
 
-            users = users_rec;
-
-            if (users.Count > 0)
-                return users;
+            if (users_rec.Count > 0)
+                return users_rec;
             else
                 return model.User.Where(t => t.City == user.City
-                && t.Gender != user.Gender).ToList();
+                && t.Gender != user.Gender && t.UserId != user.UserId)
+                    .ToList();
         }
 
         public double GetDistanceBetweenPoints(double lat1, double long1, double lat2, double long2)
