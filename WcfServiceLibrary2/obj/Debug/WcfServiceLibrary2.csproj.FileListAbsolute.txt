@@ -19,3 +19,4 @@ C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfSer
 C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.Migrations.Updateeee.resources
 C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.Migrations.UpdateListLikes.resources
 C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.Migrations.UpdateListLikes1.resources
+C:\Users\Admin\Desktop\WCF\WCF_Library_Redux\WcfServiceLibrary2\obj\Debug\WcfServiceLibrary2.Migrations.RemoveFilterInTheTableUser.resources

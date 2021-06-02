@@ -58,8 +58,6 @@ namespace WcfServiceLibrary2
         public ICollection<ChatItemUsers> chatItems { get; set; }
 
         public DateTime Birthday { get; set; }
-
-        public Filters Filters { get; set; }
     }
     
 }

@@ -10,6 +10,7 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Text;
 using System.Web;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using WcfServiceLibrary2.Classes;
@@ -45,8 +46,7 @@ namespace WcfServiceLibrary2
                     Country = country,
                     Birthday = birthday,
                     Gender = gender,
-                    chatItems = new List<ChatItemUsers>(),
-                    Filters = new Filters()
+                    chatItems = new List<ChatItemUsers>()
                 }) ;
 
                 model.SaveChanges();
@@ -245,47 +245,57 @@ namespace WcfServiceLibrary2
 
         public void AddLike(User user_u, User user_who)
         {
-            model.Likes.Add(new Likes { User_Liked_ID = user_u,
-                User_Who_Liked_ID = user_who,
-                Date_Like = DateTime.Now });
+            //Проверка, что чел сам себя не лайкает
+            if (user_u.UserId == user_who.UserId) return;
 
+            //Проверка, что чел из ЧС не может лайкнуть чела, который его туда добавил
+            if ((from n in model.BlackLists
+                 where n.UserID == user_who.UserId
+                 && n.UserEnemyID == user_u.UserId
+                 select n.UserID).ToList().Count != 0) return;
+
+            //Проверка, что такого лайка нет
+            if ((from n in model.Likes
+                 where n.User_Liked_ID == user_u.UserId
+                 && n.User_Who_Liked_ID == user_who.UserId
+                 select n).ToList().Count != 0) return;
+
+            //Добавление самого лайка
+            model.Likes.Add(new Likes { User_Liked_ID = user_u.UserId, User_Who_Liked_ID = user_who.UserId, Date_Like = DateTime.Now });
             model.SaveChanges();
 
             var r = (from n in model.Likes
-                     where n.User_Who_Liked_ID.UserId == user_u.UserId &&
-                     n.User_Liked_ID.UserId == user_who.UserId
+                     where n.User_Who_Liked_ID == user_u.UserId &&
+                     n.User_Liked_ID == user_who.UserId
                      select n).ToList();
 
             var r1 = (from n in model.Likes
-                      where n.User_Who_Liked_ID.UserId == user_who.UserId &&
-                      n.User_Liked_ID.UserId == user_u.UserId
+                      where n.User_Who_Liked_ID == user_who.UserId &&
+                      n.User_Liked_ID == user_u.UserId
                       select n).ToList();
 
             if (r.Count != 0 && r1.Count != 0)
             {
-                ChatItem ci = new ChatItem { 
-                    Messages = new List<Message>(),
-                    Participants = new List<ChatItemUsers>(),
-                    Title = "ABOBA"
-                };
+                ChatItem ci = new ChatItem { Messages = new List<Message>() };
 
                 ChatItemUsers ciu1 = new ChatItemUsers
                 {
                     ChatItem = ci,
-                    User = user_u,
+                    User = user_u.UserId,
                 };
                 ChatItemUsers ciu2 = new ChatItemUsers
                 {
                     ChatItem = ci,
-                    User = user_who
+                    User = user_who.UserId,
                 };
-
+                model.ChatItems.Add(ci);
+                model.SaveChanges();
                 model.ChatItemUsers.Add(ciu1);
                 model.ChatItemUsers.Add(ciu2);
-                ci.Participants.Add(ciu1);
-                ci.Participants.Add(ciu2);
-
-                model.ChatItems.Add(ci);
+                if (user_u.chatItems == null)
+                    user_u.chatItems = new List<ChatItemUsers>();
+                if (user_who.chatItems == null)
+                    user_who.chatItems = new List<ChatItemUsers>();
             }
             model.SaveChanges();
         }
@@ -406,6 +416,113 @@ namespace WcfServiceLibrary2
         }
 
 
+        private void ClearLikes()
+        {
+            for (int i = 0; i < model.Likes.Count();)
+            {
+                model.Likes.Remove(model.Likes.ToList()[i++]);
+            }
+
+            model.SaveChanges();
+        }
+
+        public List<TmpChatItem> GetChatItems(int UserID)
+        {
+            //User user = (from t in model.User
+            //             where t.UserId == UserID
+            //             select t).FirstOrDefault();
+            List<int> user = (List<int>)
+                (from n in model.ChatItemUsers where n.User == UserID select n.ChatItemId).ToList();
+
+            int f = (from n in model.ChatItemUsers select n.ChatItemId).ToList().Count;
+
+
+
+            if (user.Count != 0)
+            {
+                List<ChatItem> s =
+                    (from t in model.ChatItemUsers
+                     where t.User == UserID
+                     select t.ChatItem).ToList();
+
+
+                List<TmpChatItem> tmpChatItems = new List<TmpChatItem>();
+
+                for (int i = 0; i < s.Count; i++)
+                {
+                    TmpChatItem tmpChatItem = new TmpChatItem();
+                    List<int> list = (from n in model.ChatItemUsers.ToList()
+                                      where n.ChatItem.ChatItemId == s[i].ChatItemId
+                                      select n.User).ToList();
+                    List<User> res1 = (from n in model.User where list.Contains(n.UserId) select n).ToList();
+
+                    foreach (User item in res1)
+                    {
+                        if (item.UserId != UserID)
+                        {
+                            User user1 = (from n in model.User where n.UserId == item.UserId select n).FirstOrDefault();
+                            tmpChatItem.Title = user1.Name + " " + user1.LastName;
+                            tmpChatItem.ImagePath = GetImage(user1);
+                        }
+
+                    }
+                    tmpChatItem.Chatid = s[i].ChatItemId;
+                    if ((from n in model.Messages where n.chatItem.ChatItemId == tmpChatItem.Chatid select n).Count() > 0)
+                    {
+                        List<Message> res = model.Messages.ToList().Where(x => x.chatItem?.ChatItemId == s[i].ChatItemId).ToList();
+                        tmpChatItem.messages = new List<tmpMessage>();
+                        foreach (Message mes in res)
+                            tmpChatItem.messages.Add(new tmpMessage { Message = mes.Mes, SendingTime = mes.TimeSending, UserId = mes.user.UserId });
+                        //tmpChatItem.LastMessage = tmpChatItem.messages?.OrderBy(x => x.TimeSending)?.LastOrDefault()?.Mes;
+                    }
+                    tmpChatItems.Add(tmpChatItem);
+                }
+
+                return tmpChatItems;
+            }
+            return null;
+        }
+
+        private void mesage(int chatid, Message tmpmes, int id)
+        {
+            //if (!OnlineUsers.ContainsKey(id)) return;
+            OnlineUsers[id]?.callback?.OnSendMessage(chatid, tmpmes);
+        }
+        public void SendMes(Message tmpmes, TmpChatItem tmpChatItem, int Id)
+        {
+            ChatItem chatItem = (from t in model.ChatItems
+                                 where t.ChatItemId == tmpChatItem.Chatid
+                                 select t).FirstOrDefault();
+
+            User user = (from t in model.User
+                         where t.UserId == Id
+                         select t).FirstOrDefault();
+
+            Message message = new Message()
+            {
+                TimeSending = tmpmes.TimeSending,
+                chatItem = chatItem,
+                ImagePath = null,
+                IsRecieved = false,
+                Mes = tmpmes.Mes,
+                user = user
+            };
+
+            List<int> users1 = (from t in model.ChatItemUsers
+                                where t.ChatItem.ChatItemId == tmpChatItem.Chatid
+                                select t.User).Distinct().ToList();
+
+            model.Messages.Add(message);
+            model.SaveChanges();
+            foreach (var item in users1)
+            {
+                //Добавить проверку на онлайн
+                SendMessage d = new SendMessage(mesage);
+
+                d.BeginInvoke(tmpChatItem.Chatid, tmpmes, item, null, null);
+            }
+        }
+
         public void GetOnline(int Id)
         {
             if (!OnlineUsers.ContainsKey(Id)) OnlineUsers.Add(Id, new UserClient { callback = OperationContext.Current.GetCallbackChannel<IMyCallback>() });
@@ -419,19 +536,30 @@ namespace WcfServiceLibrary2
         public void BanUser(int senderID, int bannedID)
         {
             var list = from n in model.BlackLists where n.UserID == senderID select n.UserEnemyID;
-            if (list != null && !list.Contains(bannedID)) model.BlackLists.Add(new BlackList() { UserID = bannedID, ID = senderID });
+            if (list != null && !list.Contains(bannedID))
+            {
+                model.BlackLists.Add(new BlackList() { UserID = senderID, UserEnemyID = bannedID });
+                model.SaveChanges();
+            }
         }
 
         public void UnbanUser(int senderID, int bannedID)
         {
             var list = from n in model.BlackLists where n.UserID == senderID select n;
-            if (list != null && list.Select(t => t.UserEnemyID).Contains(bannedID)) model.BlackLists.Remove((from t in list where t.UserEnemyID == bannedID select t).FirstOrDefault());
+            if (list != null && list.Select(t => t.UserEnemyID).Contains(bannedID))
+            {
+                model.BlackLists.Remove((from t in list where t.UserEnemyID == bannedID && t.UserID == senderID select t).FirstOrDefault());
+                model.SaveChanges();
+                User user_u = (from n in model.User where n.UserId == senderID select n).FirstOrDefault();
+                User user_who = (from n in model.User where n.UserId == bannedID select n).FirstOrDefault();
+                AddLike(user_who, user_u);
+            }
         }
 
         public void ChangeFilters(int userID, Filters f)
         {
-            var r = (from n in model.User where n.UserId == userID select n).FirstOrDefault();
-            if (r != null && f != null) r.Filters = f;
+            //var r = (from n in model.User where n.UserId == userID select n).FirstOrDefault();
+            //if (r != null && f != null) r.Filters = f;
         }
 
         public List<User> FindUsers(int userID)
@@ -439,21 +567,161 @@ namespace WcfServiceLibrary2
             List<User> ChoosedUsers = new List<User>();
             User CurrentUser = (from n in model.User where n.UserId == userID select n).FirstOrDefault();
 
-            var results = from n in model.User
-                          where n.UserId != userID &&
-                          (((n.ColorEye == CurrentUser.Filters.ColorEye) || CurrentUser.Filters.ColorEye == null)
-                          && GetDistanceBetweenPoints(n.LatiTude, n.LongiTude, CurrentUser.LatiTude, CurrentUser.LongiTude) <= CurrentUser.Filters.MaxDistance
-                          && n.ColorHairCut == CurrentUser.Filters.ColorHair
-                          && ((DateTime.Now.Year - n.Birthday.Year <= CurrentUser.Filters.MaxAge && DateTime.Now.Year - n.Birthday.Year >= CurrentUser.Filters.MinAge)))
-                          select n;
-            foreach (var r in results) ChoosedUsers.Add(r);
+            //var results = from n in model.User
+            //              where n.UserId != userID &&
+            //              (((n.ColorEye == CurrentUser.Filters.ColorEye) || CurrentUser.Filters.ColorEye == null)
+            //              && GetDistanceBetweenPoints(n.LatiTude, n.LongiTude, CurrentUser.LatiTude, CurrentUser.LongiTude) <= CurrentUser.Filters.MaxDistance
+            //              && n.ColorHairCut == CurrentUser.Filters.ColorHair
+            //              && ((DateTime.Now.Year - n.Birthday.Year <= CurrentUser.Filters.MaxAge && DateTime.Now.Year - n.Birthday.Year >= CurrentUser.Filters.MinAge)))
+            //              select n;
+            //foreach (var r in results) ChoosedUsers.Add(r);
             return ChoosedUsers;
         }
 
         public List<User> GetUsersWhoLikedYou(User user)
         {
-            return (from n in model.Likes where n.User_Who_Liked_ID.UserId == user.UserId select n.User_Liked_ID).ToList();
+            List<int> IDs1 =
+                (from n in model.Likes
+                 where n.User_Liked_ID == user.UserId
+                 select n.User_Who_Liked_ID).Distinct().ToList();
+
+            List<int> IDs2 =
+                (from n in model.Likes
+                 where n.User_Who_Liked_ID == user.UserId
+                 select n.User_Liked_ID).Distinct().ToList();
+
+            List<int> IDs = IDs1.Except(IDs2).ToList();
+
+            return (from t in model.User where IDs.Contains(t.UserId) select t).ToList();
         }
+
+        public List<User> GetUsersWhoWasBannedByYou(User user)
+        {
+            List<User> Users = new List<User>();
+
+            List<BlackList> MyBlackList = (from n in model.BlackLists
+                                           where n.UserID == user.UserId
+                                           select n).ToList();
+
+            foreach (BlackList ban in MyBlackList)
+                Users.Add((from n in model.User where n.UserId == ban.UserEnemyID select n).FirstOrDefault());
+
+            return Users;
+        }
+
+        public void DeletePhoto(byte[] image, User user)
+        {
+            string path = $"Accounts\\{user.Name + " " + user.LastName}\\Images";
+            foreach (string Photo in Directory.GetFiles(path))
+                if (File.ReadAllBytes(Photo).SequenceEqual(image))
+                {
+                    File.Delete(Photo);
+                    model.Photos.Remove((from t in model.Photos where t.Photo == Photo select t).FirstOrDefault());
+                    model.SaveChanges();
+                }
+        }
+
+
+
+        private void CheckDirs()
+        {
+            Directory.CreateDirectory($@"Accounts");
+            foreach (User user in model.User)
+            {
+
+            }
+        }
+
+
+
+        public void AddFilter(User user, int max_distance, string color_haircut,
+            string color_eye,
+            int height,
+            int age_min, int age_max)
+        {
+            Filters filters = new Filters();
+
+            User user1 = model.User.Where(t => t.UserId == user.UserId)
+                .FirstOrDefault();
+
+            filters.MaxDistance = max_distance;
+            filters.ColorHair = color_haircut;
+            filters.ColorEye = color_eye;
+            filters.Height = height;
+            filters.MinAge = age_min;
+            filters.MaxAge = age_max;
+            filters.UserId = user1.UserId;
+
+            model.Filters.Add(filters);
+
+            model.SaveChanges();
+        }
+
+        public bool IsExistsFilter(User user)
+        {
+            if (model.Filters.Any(t => t.UserId == user.UserId))
+                return true;
+            else
+                return false;
+        }
+
+        public List<User> FeedFilterUser(User user)
+        {
+            List<User> users = new List<User>();
+
+            var result = model.Filters.Where(t => t.UserId == user.UserId)
+                .FirstOrDefault();
+
+            var rest = model.User.Where(t => t.ColorEye == result.ColorEye
+            && t.ColorHairCut == result.ColorHair).ToList();
+
+            if (rest.Count() > 0)
+            {
+                foreach (var item in rest)
+                {
+                    User user1 = model.User.Where(t => t.UserId == item.UserId)
+                        .FirstOrDefault();
+
+                    int age = CalculateYourAge(user1.Birthday);
+
+                    double _distance = GetDistanceBetweenPoints(user.LatiTude, user.LongiTude, user1.LatiTude,
+                        user1.LongiTude);
+
+                    if (age >= result.MinAge
+                        && age <= result.MaxAge
+                        && _distance <= result.MaxDistance)
+                    {
+                        users.Add(user1);
+                    }
+                }
+            }
+
+            return users;
+        }
+
+        private int CalculateYourAge(DateTime Dob)
+        {
+            int Years = new DateTime(DateTime.Now.Subtract(Dob).Ticks).Year - 1;
+
+            return Years;
+        }
+
+        public void SetDefaultFilter(User user)
+        {
+            Filters filters = model.Filters.Where(t => t.UserId == user.UserId).FirstOrDefault();
+            model.Filters.Remove(filters);
+            model.SaveChanges();
+        }
+
+        public Service1()
+        {
+            if (model.Likes.Count() == 0)
+            {
+                User ME = (from n in model.User where n.UserId == 44 select n).FirstOrDefault(); //32
+                for (int i = 0; i < 5; i++) AddLike(ME, model.User.ToList()[i]);
+            }
+        }
+
 
     }
 }

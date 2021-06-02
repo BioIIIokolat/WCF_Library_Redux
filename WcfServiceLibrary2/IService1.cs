@@ -21,7 +21,7 @@ namespace WcfServiceLibrary2
         void OnCallback();
 
         [OperationContract]
-        void OnSendMessage(string mes);
+        void OnSendMessage(int chatid, Message message);
 
     }
 
@@ -32,6 +32,21 @@ namespace WcfServiceLibrary2
     {
         [OperationContract]
         string GetData(int value);
+
+        [OperationContract]
+        void AddFilter(User user, int max_distance, string color_haircut,
+            string color_eye,
+            int height,
+            int age_min, int age_max);
+
+        [OperationContract]
+        bool IsExistsFilter(User user);
+
+        [OperationContract]
+        List<User> FeedFilterUser(User user);
+
+        [OperationContract]
+        void SetDefaultFilter(User user);
 
         [OperationContract]
         void UpdateUser(string name, string lastname, DateTime birthday,
@@ -94,6 +109,12 @@ namespace WcfServiceLibrary2
         string GetName(string email);
 
         [OperationContract]
+        List<TmpChatItem> GetChatItems(int UserID);
+
+        [OperationContract]
+        void SendMes(Classes.Message tmpmes, TmpChatItem tmpChatItem, int Id);
+
+        [OperationContract]
         void GetOnline(int Id);
 
         [OperationContract]
@@ -113,6 +134,12 @@ namespace WcfServiceLibrary2
 
         [OperationContract]
         CompositeType GetDataUsingDataContract(CompositeType composite);
+
+        [OperationContract]
+        List<User> GetUsersWhoLikedYou(User user);
+
+        [OperationContract]
+        List<User> GetUsersWhoWasBannedByYou(User user);
     }
 
     // Используйте контракт данных, как показано на следующем примере, чтобы добавить сложные типы к сервисным операциям.

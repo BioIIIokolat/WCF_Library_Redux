@@ -59,14 +59,21 @@ namespace WcfServiceLibrary2.Classes
         public int ChatItemId { get; set; }
 
         [DataMember]
-        [Key, Column(Order = 1)]
-        public int UserId { get; set; }
-
-        [DataMember]
         [ForeignKey("ChatItemId")]
         public virtual ChatItem ChatItem { get; set; }
         [DataMember]
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
+        [Key, Column(Order = 1)]
+        public int User { get; set; }
     }
+
+    [DataContract]
+    public class tmpMessage
+	{
+        [DataMember]
+		public string Message { get; set; }
+        [DataMember]
+        public DateTime SendingTime { get; set; }
+        [DataMember]
+        public int UserId { get; set; }
+	}
 }
