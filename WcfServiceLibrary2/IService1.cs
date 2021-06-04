@@ -56,7 +56,7 @@ namespace WcfServiceLibrary2
             string[] hobbies, User user);
 
         [OperationContract]
-        void AddPhoto(BitmapImage image, User user, string ext);
+        void AddPhoto(byte[] arr, User user, string ext);
 
         [OperationContract]
         byte[] GetImage(User user);
@@ -74,7 +74,10 @@ namespace WcfServiceLibrary2
         int GetCode(string email);
 
         [OperationContract]
-        void SetAvatar(User user, byte[] array);
+        string SetAvatar(User user, byte[] array);
+
+        [OperationContract]
+        List<tmpMessage> GetnewMes(int chatid, int count, int userid);
 
         [OperationContract]
         List<User> DefaultFilter(User user);
@@ -140,6 +143,15 @@ namespace WcfServiceLibrary2
 
         [OperationContract]
         List<User> GetUsersWhoWasBannedByYou(User user);
+
+        [OperationContract]
+        List<BlackList> GetBlackListsWithUser(int user1, TmpChatItem chatitem);
+
+        [OperationContract]
+        void DeletePhoto(byte[] Image, User User);
+
+        [OperationContract]
+        bool HaveUserAddThisPhoto(byte[] Image, User User);
     }
 
     // Используйте контракт данных, как показано на следующем примере, чтобы добавить сложные типы к сервисным операциям.

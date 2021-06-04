@@ -164,7 +164,7 @@ namespace WcfServiceLibrary2
             || t.Birthday.Year + 3 == user.Birthday.Year)
                 .ToList();
 
-            if (users_rec.Count > 0)
+            if (users_rec.Count > 1)
                 return users_rec;
             else
                 return model.User.Where(t => t.City == user.City
@@ -294,6 +294,8 @@ namespace WcfServiceLibrary2
             model.SaveChanges();
         }
 
+
+
         public void UpdateUser(string name, string lastname, DateTime birthday,
            string coloreye, string colorhaircut, string faith,
            string gender, string job,
@@ -327,10 +329,11 @@ namespace WcfServiceLibrary2
             model.SaveChanges();
         }
 
-        public void AddPhoto(BitmapImage image, User user, string ext)
+        public void AddPhoto(byte[] img, User user, string ext)
         {
-            int number_photo = model.Photos.Where(t => t.PhotoID == user.UserId)
-                .Count();
+            BitmapImage image = ImageFromByte(img);
+            int number_photo = model.Photos.Where(t => t.UserID == user.UserId)
+                .Count() + 1;
 
             if (number_photo <= 5)
             {
@@ -338,11 +341,13 @@ namespace WcfServiceLibrary2
 
                 string name_file = number_photo + ext;
 
-                string[] path = new string[] { Environment.CurrentDirectory + "Accounts" + name + "Images" + name_file};
+                string[] path = new string[] { "Accounts\\" + name + "\\Images\\" + name_file };
 
                 string _path = Path.Combine(path);
 
-                File.Create(_path);
+                while (File.Exists(_path)) _path = "Accounts\\" + name + "\\Images\\" + (++number_photo) + ext;
+
+                File.Create(_path).Close();
 
                 model.Photos.Add(new Photos { Photo = _path, UserID = user.UserId });
 
@@ -359,7 +364,7 @@ namespace WcfServiceLibrary2
                     }
                 }
 
-                if(ext.Contains(".jpg") || ext.Contains(".jpeg"))
+                if (ext.Contains(".jpg") || ext.Contains(".jpeg"))
                 {
                     BitmapEncoder encoder = new JpegBitmapEncoder();
                     encoder.Frames.Add(BitmapFrame.Create(image));
@@ -373,6 +378,15 @@ namespace WcfServiceLibrary2
             }
         }
 
+        private BitmapImage ImageFromByte(byte[] array)
+        {
+            BitmapImage bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.StreamSource = new MemoryStream(array);
+            bitmap.EndInit();
+            return bitmap;
+        }
+
         public bool IsExistsHobbies(User user)
         {
             if (model.Hobbies.Any(t => t.UserID == user.UserId))
@@ -383,30 +397,55 @@ namespace WcfServiceLibrary2
 
         public byte[] GetImage(User user)
         {
-            string[] path = new string[] { Environment.CurrentDirectory, user.Avatarka };
+            string fullpath = user.Avatarka;
 
-            string fullpath = Path.Combine(path);
-
-            return File.ReadAllBytes(fullpath);
+            if (File.Exists(fullpath))
+                return File.ReadAllBytes(fullpath);
+            else
+                return File.ReadAllBytes("no_avatar.png");
         }
 
-        // Метод установки аватарки
-        public void SetAvatar(User user, byte[] array)
+        public List<tmpMessage> GetnewMes(int chatid, int count, int userid)
         {
-            string path = user.Avatarka;
 
-            BitmapImage bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.StreamSource = new MemoryStream(array);
-            bitmap.EndInit();
-
-            BitmapEncoder encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bitmap));
-
-            using (var fileStream = new System.IO.FileStream(path, System.IO.FileMode.Create))
+            int res = (from n in model.Messages where n.chatItem.ChatItemId == chatid && n.user.UserId != userid select n).Count() - count;
+            if (res > 0)
             {
-                encoder.Save(fileStream);
+                var mes =
+                 (from n in model.Messages where n.chatItem.ChatItemId == chatid && n.user.UserId != userid select n);
+                List<tmpMessage> tmpMessages = new List<tmpMessage>();
+                var newmes = mes.Where(x => x.user.UserId != userid).OrderByDescending(x => x.TimeSending).Take(res);
+                if (newmes.Count() > 0)
+                {
+
+                    foreach (var item in newmes)
+                    {
+                        if (!item.TimeSending.ToString().Equals(item.Mes))
+                        {
+                            tmpMessage tmpMessage = new tmpMessage() { SendingTime = item.TimeSending, Message = item.Mes, UserId = item.user.UserId };
+                            tmpMessages.Add(tmpMessage);
+                        }
+                    }
+                    return tmpMessages;
+                }
             }
+            return null;
+        }
+
+
+        // Метод установки аватарки
+        public string SetAvatar(User user, byte[] array)
+        {
+            List<Photos> Photos = (from n in model.Photos where n.UserID == user.UserId select n).ToList();
+            foreach (Photos photo in Photos)
+                if (File.Exists(photo.Photo))
+                    if (File.ReadAllBytes(photo.Photo).SequenceEqual(array))
+                    {
+                        user.Avatarka = photo.Photo;
+                        model.SaveChanges();
+                        return user.Avatarka;
+                    }
+            return user.Avatarka;
         }
 
 
@@ -426,7 +465,7 @@ namespace WcfServiceLibrary2
             //             where t.UserId == UserID
             //             select t).FirstOrDefault();
             List<int> user = (List<int>)
-                (from n in model.ChatItemUsers where n.User == UserID select n.ChatItemId).ToList();
+                (from n in model.ChatItemUsers where n.User == UserID select n.ChatItemId).Distinct().ToList();
 
             int f = (from n in model.ChatItemUsers select n.ChatItemId).ToList().Count;
 
@@ -452,11 +491,15 @@ namespace WcfServiceLibrary2
 
                     foreach (User item in res1)
                     {
-                        if (item.UserId != UserID)
+                        User user1 = (from n in model.User where n.UserId == item.UserId select n).FirstOrDefault();
+                        if (item.UserId != UserID && tmpChatItems.Where(x => x.Title == user1.Name + " " + user1.LastName).Count() == 0)
                         {
-                            User user1 = (from n in model.User where n.UserId == item.UserId select n).FirstOrDefault();
                             tmpChatItem.Title = user1.Name + " " + user1.LastName;
                             tmpChatItem.ImagePath = GetImage(user1);
+                        }
+                        else
+                        {
+                            continue;
                         }
 
                     }
@@ -469,7 +512,13 @@ namespace WcfServiceLibrary2
                             tmpChatItem.messages.Add(new tmpMessage { Message = mes.Mes, SendingTime = mes.TimeSending, UserId = mes.user.UserId });
                         //tmpChatItem.LastMessage = tmpChatItem.messages?.OrderBy(x => x.TimeSending)?.LastOrDefault()?.Mes;
                     }
-                    tmpChatItems.Add(tmpChatItem);
+                    if (tmpChatItems.Where(x => x.Chatid == tmpChatItem.Chatid).Count() == 0)
+                    {
+                        if (tmpChatItem.Title != "" && tmpChatItem.Title != null)
+                        {
+                            tmpChatItems.Add(tmpChatItem);
+                        }
+                    }
                 }
 
                 return tmpChatItems;
@@ -480,10 +529,14 @@ namespace WcfServiceLibrary2
         private void mesage(int chatid, Message tmpmes, int id)
         {
             //if (!OnlineUsers.ContainsKey(id)) return;
-            OnlineUsers[id]?.callback?.OnSendMessage(chatid, tmpmes);
+            //OnlineUsers[id]?.callback?.OnSendMessage(chatid, tmpmes);
         }
+
         public void SendMes(Message tmpmes, TmpChatItem tmpChatItem, int Id)
         {
+            //if (GetBlackListsWithUser(tmpmes.user.UserId, tmpChatItem).Count > 0)
+            //    return;
+
             ChatItem chatItem = (from t in model.ChatItems
                                  where t.ChatItemId == tmpChatItem.Chatid
                                  select t).FirstOrDefault();
@@ -526,7 +579,6 @@ namespace WcfServiceLibrary2
         {
             if (OnlineUsers.ContainsKey(Id)) OnlineUsers.Remove(Id);
         }
-
         public void BanUser(int senderID, int bannedID)
         {
             var list = from n in model.BlackLists where n.UserID == senderID select n.UserEnemyID;
@@ -610,8 +662,11 @@ namespace WcfServiceLibrary2
                 if (File.ReadAllBytes(Photo).SequenceEqual(image))
                 {
                     File.Delete(Photo);
-                    model.Photos.Remove((from t in model.Photos where t.Photo == Photo select t).FirstOrDefault());
+                    Photos ph = (from t in model.Photos where t.Photo == Photo select t)?.FirstOrDefault();
+                    if (Photo == user.Avatarka) user.Avatarka = "no_avatar.png";
+                    model.Photos.Remove(ph);
                     model.SaveChanges();
+                    break;
                 }
         }
 
@@ -705,6 +760,35 @@ namespace WcfServiceLibrary2
             Filters filters = model.Filters.Where(t => t.UserId == user.UserId).FirstOrDefault();
             model.Filters.Remove(filters);
             model.SaveChanges();
+        }
+
+        public List<BlackList> GetBlackListsWithUser(int user1, TmpChatItem chatitem)
+        {
+            int user2 = (from t in model.ChatItemUsers where t.ChatItemId == chatitem.Chatid && t.User != user1 select t.User).FirstOrDefault();
+
+            List<BlackList> list = (from t in model.BlackLists where (t.UserID == user1 || t.UserEnemyID == user1) && (t.UserID == user2 || t.UserEnemyID == user2) select t).ToList();
+            if (list == null) list = new List<BlackList>();
+            return list;
+        }
+
+        public bool HaveUserAddThisPhoto(byte[] Image, User User)
+        {
+            List<Photos> photos = (from n in model.Photos where n.UserID == User.UserId select n).ToList();
+            for (int i = 0; i < photos.Count; i++)
+            {
+                if (File.Exists(photos[i].Photo))
+                {
+                    if (File.ReadAllBytes(photos[i].Photo).SequenceEqual(Image))
+                        return true;
+                }
+                else
+                {
+                    model.Photos.Remove(photos[i]);
+                    model.SaveChanges();
+                }
+            }
+            return false;
+
         }
 
         public Service1()
